@@ -6,8 +6,12 @@
   },
   "license": "MIT",
   "dependencies": {
+    "date-fns": "^2.14.0",
     "discord.js": "^12.2.0",
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "pg": "^8.2.1",
+    "reflect-metadata": "^0.1.10",
+    "typeorm": "0.2.25"
   },
   "devDependencies": {
     "@types/jest": "^26.0.3",
