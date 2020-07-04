@@ -5,11 +5,11 @@ import { Repository } from 'typeorm';
 import { Vouch } from '../entities/vouch';
 import { MessageCommand } from './command.base';
 
-export class CheckRepCommand extends MessageCommand {
+export class CheckVouchCommand extends MessageCommand {
   constructor(private client: Client, private vouchRepository: Repository<Vouch>) {
     super({
-      command: '?rep',
-      regex: /\?rep <@\!?(\d+)>.*/,
+      command: '?vouch',
+      regex: /\?vouch <@\!?(\d+)>.*/,
       requiresPrefix: false,
     });
   }
@@ -30,9 +30,9 @@ export class CheckRepCommand extends MessageCommand {
 
     const embed = new MessageEmbed()
       .setColor(752646)
-      .setTitle(`Reputation report for ${userInfo.username}`)
+      .setTitle(`Report for ${userInfo.username}`)
       .addField(
-        'Total Reputation',
+        'Total Vouches',
         vouches.reduce((sum, vouch) => vouch.amount + sum, 0),
         true
       )

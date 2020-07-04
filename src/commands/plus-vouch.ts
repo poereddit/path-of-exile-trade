@@ -4,11 +4,11 @@ import { Repository } from 'typeorm';
 import { Vouch } from '../entities/vouch';
 import { MessageCommand } from './command.base';
 
-export class PlusRepCommand extends MessageCommand {
+export class PlusVouchCommand extends MessageCommand {
   constructor(private client: Client, private vouchRepository: Repository<Vouch>) {
     super({
-      command: '+rep',
-      regex: /\+rep\s+<@\!?(\d+)>(.*)/,
+      command: '+vouch',
+      regex: /\+vouch\s+<@\!?(\d+)>(.*)/,
       requiresPrefix: false,
     });
   }
@@ -49,9 +49,7 @@ export class PlusRepCommand extends MessageCommand {
       message.react('✅');
     } else {
       message.react('❌');
-      message.channel.send(
-        `Could not add reputation for ${userInfo.username}#${userInfo.discriminator} because they are not on our server.`
-      );
+      message.channel.send(`Could not add a vouch for ${userInfo.username}#${userInfo.discriminator} because they are not on our server.`);
     }
   }
 

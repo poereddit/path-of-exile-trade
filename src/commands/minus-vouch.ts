@@ -4,11 +4,11 @@ import { Repository } from 'typeorm';
 import { Vouch } from '../entities/vouch';
 import { MessageCommand } from './command.base';
 
-export class MinusRepCommand extends MessageCommand {
+export class MinusVouchCommand extends MessageCommand {
   constructor(private client: Client, private vouchRepository: Repository<Vouch>) {
     super({
-      command: '-rep',
-      regex: /\-rep\s+<@\!?(\d+)>(.*)/,
+      command: '-vouch',
+      regex: /\-vouch\s+<@\!?(\d+)>(.*)/,
       requiresPrefix: false,
     });
   }
