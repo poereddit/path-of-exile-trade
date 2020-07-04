@@ -24,20 +24,35 @@ export class PlusRepCommand extends MessageCommand {
       return;
     }
 
-    const now = new Date();
+    const userInfo = await this.client.users.fetch(parsedMessage.user);
 
-    const vouch = this.vouchRepository.create({
-      voucherId: message.author.id,
-      vouchedId: parsedMessage.user,
-      reason: parsedMessage.reason,
-      amount: 1,
-      createdAt: now.toUTCString(),
-      updatedAt: now.toUTCString(),
-    });
+    if (message.author.id === userInfo.id) {
+      message.channel.send(`Nice try, <@${message.author.id}>! Vouching yourself isn't allowed.`);
 
-    await this.vouchRepository.save(vouch);
+      return;
+    }
 
-    await message.react('✅');
+    if (message.guild?.member(userInfo)) {
+      const now = new Date();
+
+      const vouch = this.vouchRepository.create({
+        voucherId: message.author.id,
+        vouchedId: parsedMessage.user,
+        reason: parsedMessage.reason,
+        amount: 1,
+        createdAt: now.toUTCString(),
+        updatedAt: now.toUTCString(),
+      });
+
+      await this.vouchRepository.save(vouch);
+
+      message.react('✅');
+    } else {
+      message.react('❌');
+      message.channel.send(
+        `Could not add reputation for ${userInfo.username}#${userInfo.discriminator} because they are not on our server.`
+      );
+    }
   }
 
   private parseMessage(message: string): { user: string; reason: string } | null {
