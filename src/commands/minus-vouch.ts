@@ -31,6 +31,14 @@ export class MinusVouchCommand extends MessageCommand {
       return;
     }
 
+    if (this.hasBlankVouchReason(parsedMessage.reason)) {
+      message.react('❌');
+      message.channel.send(
+        `A reason is necessary to vouch ${userInfo.username}#${userInfo.discriminator}. Try again with the command \`+vouch @${userInfo.username}#${userInfo.discriminator} <reason>\`.`
+      );
+      return;
+    }
+
     if (this.isNotAMemberOfGuild(message, userInfo)) {
       message.react('❌');
       message.channel.send(`Couldn't add a vouch for ${userInfo.username}#${userInfo.discriminator} because they aren't on our server.`);
@@ -39,6 +47,10 @@ export class MinusVouchCommand extends MessageCommand {
 
     await this.saveVouch(message, parsedMessage);
     message.react('✅');
+  }
+
+  private hasBlankVouchReason(reason: string) {
+    return reason.trim() === '';
   }
 
   private isNotAMemberOfGuild(message: Message, userInfo: User) {
