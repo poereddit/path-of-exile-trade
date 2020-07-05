@@ -25,7 +25,7 @@ export class CheckVouchCommand extends MessageCommand {
       return;
     }
 
-    const user = this.getUserFromMessage(message.content);
+    const user = this.getUserToCheckFromMessage(message.content);
 
     if (!user) {
       return;
@@ -39,7 +39,7 @@ export class CheckVouchCommand extends MessageCommand {
     const embed = new MessageEmbed()
       .setColor(this.getEmbedColor(vouchSummary))
       .setTitle(`${userInfo.username}#${userInfo.discriminator}'s Report`)
-      .addField('Total Vouches', vouchSummary.positive - vouchSummary.negative, true)
+      .addField('Vouch Score', vouchSummary.positive - vouchSummary.negative, true)
       .addField('Positive', vouchSummary.positive, true)
       .addField('Negative', vouchSummary.negative, true)
       .addField('Unique Vouchers', vouchSummary.uniqueVouchers, true)
@@ -47,15 +47,11 @@ export class CheckVouchCommand extends MessageCommand {
       .addField('\u200b', '\u200b', true)
       .addField('Account Age', `created ${formatDistanceToNow(userInfo.createdAt, { includeSeconds: true })} ago`, true);
 
-    try {
-      const guildUserInfo = message.guild?.member(userInfo.id);
-      if (guildUserInfo?.joinedAt != null) {
-        embed.addField('Server Age', `joined ${formatDistanceToNow(guildUserInfo.joinedAt, { includeSeconds: true })} ago`, true);
-      } else {
-        embed.addField('Server Age', 'Could not find information on user', true);
-      }
-    } catch {
-      embed.addField('Server Age', 'User is not currently on our server', true);
+    const guildUserInfo = message.guild?.member(userInfo.id);
+    if (guildUserInfo?.joinedAt != null) {
+      embed.addField('Server Age', `joined ${formatDistanceToNow(guildUserInfo.joinedAt, { includeSeconds: true })} ago`, true);
+    } else {
+      embed.addField('Server Age', `User isn't on our server`, true);
     }
 
     embed.addField('---', `Have issues with the report? Let us know in <#${process.env.SUGGESTIONS_CHANNEL_ID}>!`);
@@ -83,7 +79,7 @@ export class CheckVouchCommand extends MessageCommand {
     };
   }
 
-  private getUserFromMessage(message: string): string | null {
+  private getUserToCheckFromMessage(message: string): string | null {
     const matches = this.regex.exec(message);
     if (!matches) {
       return null;

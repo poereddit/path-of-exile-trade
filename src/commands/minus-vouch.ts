@@ -1,4 +1,4 @@
-import { Client, Message } from 'discord.js';
+import { Client, Message, User } from 'discord.js';
 import { Repository } from 'typeorm';
 
 import { Vouch } from '../entities/vouch';
@@ -18,12 +18,34 @@ export class MinusVouchCommand extends MessageCommand {
       return;
     }
 
-    const parsedMessage = this.parseMessage(message.content);
-
+    const parsedMessage = this.parseMessageForVouch(message.content);
     if (!parsedMessage) {
       return;
     }
 
+    const userInfo = await this.client.users.fetch(parsedMessage.user);
+    if (message.author.id === userInfo.id) {
+      message.react('❌');
+      message.channel.send(`Nice try, <@${message.author.id}>! Vouching yourself isn't allowed.`);
+
+      return;
+    }
+
+    if (this.isNotAMemberOfGuild(message, userInfo)) {
+      message.react('❌');
+      message.channel.send(`Couldn't add a vouch for ${userInfo.username}#${userInfo.discriminator} because they aren't on our server.`);
+      return;
+    }
+
+    await this.saveVouch(message, parsedMessage);
+    message.react('✅');
+  }
+
+  private isNotAMemberOfGuild(message: Message, userInfo: User) {
+    return !message.guild?.member(userInfo);
+  }
+
+  private async saveVouch(message: Message, parsedMessage: { user: string; reason: string }) {
     const now = new Date();
 
     const vouch = this.vouchRepository.create({
@@ -36,11 +58,9 @@ export class MinusVouchCommand extends MessageCommand {
     });
 
     await this.vouchRepository.save(vouch);
-
-    await message.react('✅');
   }
 
-  private parseMessage(message: string): { user: string; reason: string } | null {
+  private parseMessageForVouch(message: string): { user: string; reason: string } | null {
     const matches = this.regex.exec(message);
     if (!matches) {
       return null;
