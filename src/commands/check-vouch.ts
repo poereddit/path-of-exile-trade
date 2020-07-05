@@ -42,9 +42,7 @@ export class CheckVouchCommand extends MessageCommand {
       .addField('Vouch Score', vouchSummary.positive - vouchSummary.negative, true)
       .addField('Positive', vouchSummary.positive, true)
       .addField('Negative', vouchSummary.negative, true)
-      .addField('Unique Vouchers', vouchSummary.uniqueVouchers, true)
-      .addField('\u200b', '\u200b', true)
-      .addField('\u200b', '\u200b', true)
+      .addField('Unique Vouchers', vouchSummary.uniqueVouchers)
       .addField('Account Age', `created ${formatDistanceToNow(userInfo.createdAt, { includeSeconds: true })} ago`, true);
 
     const guildUserInfo = message.guild?.member(userInfo.id);
