@@ -12,4 +12,4 @@
    1. Docker: `docker run --rm --env-file=.env <your_tag> ./node_modules/.bin/typeorm migration:run`
 1. Run the bot
    1. Local: `node ./dist/bot.js`
-   1. Docker: `docker run -it --env-file=.env <your_tag>`
+   1. Docker: `docker run -d -it --env-file=.env <your_tag>`
