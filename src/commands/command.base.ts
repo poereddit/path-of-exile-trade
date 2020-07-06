@@ -23,6 +23,10 @@ export abstract class MessageCommand {
       return false;
     }
 
+    if (message.channel.id !== `${process.env.VOUCH_CHANNEL_ID}`) {
+      return false;
+    }
+
     const prefix = process.env.PREFIX ?? '';
 
     return this.hasValidPrefix(message.content, prefix) && this.isValidCommand(message.content, prefix);

@@ -5,6 +5,9 @@ export class Vouch {
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Column({ name: 'message_id' })
+  messageId!: string;
+
   @Column({ name: 'voucher_id' })
   voucherId!: string;
 

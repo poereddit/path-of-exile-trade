@@ -13,7 +13,7 @@ export class PlusVouchCommand extends MessageCommand {
     });
   }
 
-  async execute(message: Message): Promise<void> {
+  async execute(message: Message, options: ExecuteOptions = { warnUser: true }): Promise<void> {
     if (!super.canExecute(message)) {
       return;
     }
@@ -25,23 +25,31 @@ export class PlusVouchCommand extends MessageCommand {
 
     const userInfo = await this.client.users.fetch(parsedMessage.user);
     if (message.author.id === userInfo.id) {
-      message.react('❌');
-      message.channel.send(`Nice try, <@${message.author.id}>! Vouching yourself isn't allowed.`);
+      if (options.warnUser) {
+        message.react('❌');
+        message.channel.send(`Nice try, <@${message.author.id}>! Vouching yourself isn't allowed.`);
+      }
 
       return;
     }
 
     if (this.isNotAMemberOfGuild(message, userInfo)) {
-      message.react('❌');
-      message.channel.send(`Couldn't add a vouch for ${userInfo.username}#${userInfo.discriminator} because they aren't on our server.`);
+      if (options.warnUser) {
+        message.react('❌');
+        message.channel.send(`Couldn't add a vouch for ${userInfo.username}#${userInfo.discriminator} because they aren't on our server.`);
+      }
+
       return;
     }
 
     if (this.hasBlankVouchReason(parsedMessage.reason)) {
-      message.react('❌');
-      message.channel.send(
-        `A reason is necessary to vouch ${userInfo.username}#${userInfo.discriminator}. Try again with the command \`+vouch @${userInfo.username}#${userInfo.discriminator} <reason>\`.`
-      );
+      if (options.warnUser) {
+        message.react('❌');
+        message.channel.send(
+          `A reason is necessary to vouch ${userInfo.username}#${userInfo.discriminator}. Try again with the command \`+vouch @${userInfo.username}#${userInfo.discriminator} <reason>\`.`
+        );
+      }
+
       return;
     }
 
@@ -61,6 +69,7 @@ export class PlusVouchCommand extends MessageCommand {
     const now = new Date();
 
     const vouch = this.vouchRepository.create({
+      messageId: message.id,
       voucherId: message.author.id,
       vouchedId: parsedMessage.user,
       reason: parsedMessage.reason,
@@ -83,4 +92,8 @@ export class PlusVouchCommand extends MessageCommand {
       reason: matches[2].trim(),
     };
   }
+}
+
+interface ExecuteOptions {
+  warnUser: boolean;
 }
