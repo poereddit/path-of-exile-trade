@@ -65,8 +65,8 @@ export class PlusVouchCommand extends MessageCommand {
       vouchedId: parsedMessage.user,
       reason: parsedMessage.reason,
       amount: 1,
-      createdAt: now.toUTCString(),
-      updatedAt: now.toUTCString(),
+      createdAt: now,
+      updatedAt: now,
     });
 
     await this.vouchRepository.save(vouch);

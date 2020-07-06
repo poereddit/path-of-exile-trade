@@ -9,8 +9,8 @@ export class CreateVouches1593566660925 implements MigrationInterface {
         vouched_id text NOT NULL,
         amount int NOT NULL,
         reason text NOT NULL,
-        created_at timestamp NOT NULL,
-        updated_at timestamp NOT NULL
+        created_at timestamptz NOT NULL,
+        updated_at timestamptz NOT NULL
       );
     `);
 

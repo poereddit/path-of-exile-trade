@@ -18,8 +18,8 @@ export class Vouch {
   amount!: number;
 
   @Column({ name: 'created_at' })
-  createdAt!: string;
+  createdAt!: Date;
 
   @Column({ name: 'updated_at' })
-  updatedAt!: string;
+  updatedAt!: Date;
 }
