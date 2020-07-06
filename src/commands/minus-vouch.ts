@@ -1,3 +1,4 @@
+import { addMinutes, differenceInMinutes, formatDistance } from 'date-fns';
 import { Client, Message, User } from 'discord.js';
 import { Repository } from 'typeorm';
 
@@ -53,8 +54,45 @@ export class MinusVouchCommand extends MessageCommand {
       return;
     }
 
+    const lastVouchForUserByAuthor = await this.vouchRepository.findOne({
+      where: {
+        vouchedId: parsedMessage.user,
+        voucherId: message.author.id,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    if (lastVouchForUserByAuthor) {
+      const lastVouch = await message.channel.messages.fetch(lastVouchForUserByAuthor.messageId);
+
+      if (this.hasEnoughTimePastSinceLastVouchFromAuthorToUser(lastVouch.createdAt, message.createdAt)) {
+        if (options.warnUser) {
+          message.react('❌');
+          message.channel.send(
+            `You can't vouch ${userInfo.username}#${
+              userInfo.discriminator
+            } because you vouched them too recently. You can vouch them again in ${formatDistance(
+              new Date(),
+              addMinutes(lastVouch.createdAt, 10),
+              {
+                includeSeconds: true,
+              }
+            )}.`
+          );
+        }
+
+        return;
+      }
+    }
+
     await this.saveVouch(message, parsedMessage);
     message.react('✅');
+  }
+
+  private hasEnoughTimePastSinceLastVouchFromAuthorToUser(createdAt: Date, vouchAttemptCreatedAt: Date) {
+    return differenceInMinutes(vouchAttemptCreatedAt, createdAt) < 10;
   }
 
   private hasBlankVouchReason(reason: string) {
