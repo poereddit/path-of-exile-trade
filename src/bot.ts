@@ -36,16 +36,18 @@ async function parseMessagesWhileOffline(
   plusVouchCommand: PlusVouchCommand
 ) {
   const lastProcessedVouch = await vouchRepository.findOne({ order: { createdAt: 'DESC' } });
-  if (lastProcessedVouch) {
-    const vouchChannel = await client.channels.fetch(`${process.env.VOUCH_CHANNEL_ID}`);
-    let unprocessedMessages = await (vouchChannel as TextChannel).messages.fetch({ after: lastProcessedVouch.messageId });
+  if (!lastProcessedVouch) {
+    return;
+  }
 
-    unprocessedMessages = unprocessedMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+  const vouchChannel = await client.channels.fetch(`${process.env.VOUCH_CHANNEL_ID}`);
+  let unprocessedMessages = await (vouchChannel as TextChannel).messages.fetch({ after: lastProcessedVouch.messageId });
 
-    for (const unprocessedMessage of unprocessedMessages) {
-      await minusVouchCommand.execute(unprocessedMessage[1], { warnUser: false });
-      await plusVouchCommand.execute(unprocessedMessage[1], { warnUser: false });
-    }
+  unprocessedMessages = unprocessedMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+
+  for (const unprocessedMessage of unprocessedMessages) {
+    await minusVouchCommand.execute(unprocessedMessage[1], { warnUser: false });
+    await plusVouchCommand.execute(unprocessedMessage[1], { warnUser: false });
   }
 }
 
