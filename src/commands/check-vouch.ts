@@ -1,5 +1,5 @@
 import { addDays, differenceInDays, formatDistance, formatDistanceToNow } from 'date-fns';
-import { Client, GuildMember, Message, MessageEmbed } from 'discord.js';
+import { Client, GuildMember, Message, MessageEmbed, TextChannel } from 'discord.js';
 import { Repository } from 'typeorm';
 
 import { Vouch } from '../entities/vouch';
@@ -45,17 +45,17 @@ export class CheckVouchCommand extends MessageCommand {
 
     const embed = new MessageEmbed()
       .setColor(this.getEmbedColor(vouchSummary, guildUserJoinDate))
-      .setTitle(`${userInfo.username}#${userInfo.discriminator}'s Report`);
-
-    if (vouchSummary.uniqueVouchers) {
-      embed.addField('Recent Vouches', await this.getRecentVouchesEmbedField(vouches));
-    }
-
-    embed
+      .setTitle(`${userInfo.username}#${userInfo.discriminator}'s Report`)
       .addField('Vouch Score', vouchSummary.positive - vouchSummary.negative, true)
       .addField('Positive', vouchSummary.positive, true)
       .addField('Negative', vouchSummary.negative, true)
-      .addField('Unique Vouchers', vouchSummary.uniqueVouchers)
+      .addField('Unique Vouchers', vouchSummary.uniqueVouchers);
+
+    if (vouchSummary.uniqueVouchers) {
+      embed.addField('Recent Vouches', await this.getRecentVouchesEmbedField(vouches, message.channel as TextChannel));
+    }
+
+    embed
       .addField('Account Age', `created ${formatDistanceToNow(userInfo.createdAt, { includeSeconds: true, addSuffix: true })}`, true)
       .addField('Server Age', this.getServerAgeInfo(guildUserInfo), true)
       .addField('---', `Have issues with the report? Let us know in <#${process.env.SUGGESTIONS_CHANNEL_ID}>!`);
@@ -68,22 +68,30 @@ export class CheckVouchCommand extends MessageCommand {
     await message.channel.send(embed);
   }
 
-  async getRecentVouchesEmbedField(vouches: Vouch[]): Promise<string> {
+  async getRecentVouchesEmbedField(vouches: Vouch[], channel: TextChannel): Promise<string> {
     const mostRecentVouches = vouches.slice(0, 5);
 
     let vouchList = '';
 
     for (const vouch of mostRecentVouches) {
       const voucher = await this.client.users.fetch(vouch.voucherId);
+      let message = null;
+      try {
+        message = await channel.messages.fetch(vouch.messageId);
+      } catch {}
       const date = formatDistanceToNow(vouch.updatedAt, { includeSeconds: true, addSuffix: true });
       const user = `${voucher.username}#${voucher.discriminator}`;
       let reason = vouch.reason;
 
-      if (reason.length > 140) {
-        reason = `${vouch.reason.substring(0, 140)}...`;
+      if (reason.length > 30) {
+        reason = `${vouch.reason.substring(0, 30)}...`;
       }
 
-      vouchList = `${vouchList}${date} by @${user}: *${reason}*\n`;
+      if (message) {
+        vouchList = `${vouchList}[${date} by @${user}](${message.url}): *${reason}*\n`;
+      } else {
+        vouchList = `${vouchList}${date} by @${user}: *${reason}*\n`;
+      }
     }
 
     return vouchList;
