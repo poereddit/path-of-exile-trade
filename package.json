@@ -5,6 +5,9 @@
     "email": "stephencavaliere@gmail.com"
   },
   "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "date-fns": "^2.14.0",
     "discord.js": "^12.2.0",
