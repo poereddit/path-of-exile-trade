@@ -39,15 +39,30 @@ async function parseMessagesWhileOffline(
   if (!lastProcessedVouch) {
     return;
   }
-
   const vouchChannel = await client.channels.fetch(`${process.env.VOUCH_CHANNEL_ID}`);
-  let unprocessedMessages = await (vouchChannel as TextChannel).messages.fetch({ after: lastProcessedVouch.messageId });
 
-  unprocessedMessages = unprocessedMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+  let unprocessedMessages: Message[] = [];
+
+  let messageBatch = await (vouchChannel as TextChannel).messages.fetch({ after: lastProcessedVouch?.messageId, limit: 100 });
+  while (messageBatch.size === 100) {
+    const messageBatchArray = [...messageBatch.array()].reverse();
+
+    unprocessedMessages = [...messageBatchArray, ...unprocessedMessages];
+
+    messageBatch = await (vouchChannel as TextChannel).messages.fetch({
+      after: lastProcessedVouch?.messageId,
+      before: unprocessedMessages[0].id,
+      limit: 100,
+    });
+  }
+
+  const messageBatchArray = [...messageBatch.array()].reverse();
+
+  unprocessedMessages = [...messageBatchArray, ...unprocessedMessages];
 
   for (const unprocessedMessage of unprocessedMessages) {
-    await minusVouchCommand.execute(unprocessedMessage[1], { warnUser: false });
-    await plusVouchCommand.execute(unprocessedMessage[1], { warnUser: false });
+    await minusVouchCommand.execute(unprocessedMessage, { warnUser: false });
+    await plusVouchCommand.execute(unprocessedMessage, { warnUser: false });
   }
 }
 

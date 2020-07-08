@@ -15,7 +15,7 @@ export class CheckVouchCommand extends MessageCommand {
   constructor(private client: Client, private vouchRepository: Repository<Vouch>) {
     super({
       command: '?vouch',
-      regex: /\?vouch <@\!?(\d+)>.*/,
+      regex: /\?vouch\s+<@\!?(\d+)>.*/,
       requiresPrefix: false,
     });
   }
@@ -102,8 +102,7 @@ export class CheckVouchCommand extends MessageCommand {
 
     if (joinDate != null && this.isNewToServer(joinDate)) {
       description += `⚠️ User is new to our server. Please exercise extra caution when trading.\n`;
-      description += `This warning will disappear ${formatDistance(addDays(joinDate, 3), new Date(), {
-        addSuffix: true,
+      description += `This warning will disappear in ${formatDistance(new Date(), addDays(joinDate, 7), {
         includeSeconds: true,
       })}.\n\n`;
     }
