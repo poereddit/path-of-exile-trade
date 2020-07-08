@@ -104,16 +104,14 @@ export class PlusVouchCommand extends MessageCommand {
   }
 
   private async saveVouch(message: Message, parsedMessage: { user: string; reason: string }) {
-    const now = new Date();
-
     const vouch = this.vouchRepository.create({
       messageId: message.id,
       voucherId: message.author.id,
       vouchedId: parsedMessage.user,
       reason: parsedMessage.reason,
       amount: 1,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: message.createdAt,
+      updatedAt: message.createdAt,
     });
 
     await this.vouchRepository.save(vouch);
