@@ -43,7 +43,7 @@ async function parseMessagesWhileOffline(
 
   let unprocessedMessages: Message[] = [];
 
-  let messageBatch = await vouchChannel.messages.fetch({ after: lastProcessedVouch?.messageId, limit: 100 });
+  let messageBatch = await vouchChannel.messages.fetch({ limit: 100 });
   while (messageBatch.size > 0) {
     let messageBatchArray = [...messageBatch.array()];
     let reachedLastProcessedVouch = false;
