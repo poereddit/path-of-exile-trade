@@ -17,7 +17,7 @@ async function main() {
   const minusVouchCommand = new MinusVouchCommand(client, connection.getRepository(Vouch));
   const checkVouchCommand = new CheckVouchCommand(client, connection.getRepository(Vouch));
 
-  client.on('ready', async () => {
+  client.once('ready', async () => {
     client.user?.setActivity('Path of Hideout', { type: 'PLAYING' });
     await parseMessagesWhileOffline(connection.getRepository(Vouch), client, minusVouchCommand, plusVouchCommand);
   });

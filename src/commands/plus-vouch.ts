@@ -34,7 +34,7 @@ export class PlusVouchCommand extends MessageCommand {
       return;
     }
 
-    if (this.isNotAMemberOfGuild(message, userInfo)) {
+    if (await this.isNotAMemberOfGuild(message, userInfo)) {
       if (options.warnUser) {
         message.react('❌');
         message.channel.send(`Couldn't add a vouch for ${userInfo.username}#${userInfo.discriminator} because they aren't on our server.`);
@@ -99,8 +99,9 @@ export class PlusVouchCommand extends MessageCommand {
     return reason.trim() === '';
   }
 
-  private isNotAMemberOfGuild(message: Message, userInfo: User) {
-    return !message.guild?.member(userInfo);
+  private async isNotAMemberOfGuild(message: Message, user: User) {
+    const guildMember = await message.guild?.members.fetch(user);
+    return !guildMember;
   }
 
   private async saveVouch(message: Message, parsedMessage: { user: string; reason: string }) {
