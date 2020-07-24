@@ -4,28 +4,30 @@ import { Client, Message } from 'discord.js';
 import { createConnection } from 'typeorm';
 
 import { CheckVouchCommand } from './commands/check-vouch';
-import { MinusVouchCommand } from './commands/minus-vouch';
-import { PlusVouchCommand } from './commands/plus-vouch';
+import { MinusVouchCommandHandler } from './commands/minus-vouch.command-handler';
+import { PlusVouchCommandHandler } from './commands/plus-vouch.command-handler';
 import { Vouch } from './entities/vouch';
 import { parseOfflineMessages } from './events/ready/parse-offline-messages';
 import { setStatus } from './events/ready/set-status';
+import { VouchRepository } from './repositories/vouch.repository';
 
 async function main() {
   const connection = await createConnection();
+  const vouchRepository = connection.getCustomRepository(VouchRepository);
 
   const client = new Client();
 
-  const plusVouchCommand = new PlusVouchCommand(client, connection.getRepository(Vouch));
-  const minusVouchCommand = new MinusVouchCommand(client, connection.getRepository(Vouch));
   const checkVouchCommand = new CheckVouchCommand(client, connection.getRepository(Vouch));
+  const plusVouchCommandHandler = new PlusVouchCommandHandler(client, vouchRepository);
+  const minusVouchCommandHandler = new MinusVouchCommandHandler(client, vouchRepository);
 
   client.once('ready', async () => {
     setStatus(client.user);
-    await parseOfflineMessages(connection.getRepository(Vouch), client, minusVouchCommand, plusVouchCommand);
+    await parseOfflineMessages(vouchRepository, client, minusVouchCommandHandler, plusVouchCommandHandler);
   });
 
-  client.on(plusVouchCommand.on, async (message: Message) => await plusVouchCommand.execute(message));
-  client.on(minusVouchCommand.on, async (message: Message) => await minusVouchCommand.execute(message));
+  client.on('message', async (message: Message) => await plusVouchCommandHandler.handle(message));
+  client.on('message', async (message: Message) => await minusVouchCommandHandler.handle(message));
   client.on(checkVouchCommand.on, async (message: Message) => await checkVouchCommand.execute(message));
 
   client.login(process.env.DISCORD_TOKEN);

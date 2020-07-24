@@ -1,17 +1,16 @@
 import { Client, Message, TextChannel } from 'discord.js';
-import { Repository } from 'typeorm';
 
-import { MinusVouchCommand } from '../../commands/minus-vouch';
-import { PlusVouchCommand } from '../../commands/plus-vouch';
-import { Vouch } from '../../entities/vouch';
+import { MinusVouchCommandHandler } from '../../commands/minus-vouch.command-handler';
+import { PlusVouchCommandHandler } from '../../commands/plus-vouch.command-handler';
+import { VouchRepository } from '../../repositories/vouch.repository';
 
 export async function parseOfflineMessages(
-  vouchRepository: Repository<Vouch>,
+  vouchRepository: VouchRepository,
   client: Client,
-  minusVouchCommand: MinusVouchCommand,
-  plusVouchCommand: PlusVouchCommand
+  minusVouchCommand: MinusVouchCommandHandler,
+  plusVouchCommand: PlusVouchCommandHandler
 ): Promise<void> {
-  const lastProcessedVouch = await vouchRepository.findOne({ order: { createdAt: 'DESC' } });
+  const lastProcessedVouch = await vouchRepository.getLastVouch();
   if (!lastProcessedVouch) {
     return;
   }
@@ -20,8 +19,8 @@ export async function parseOfflineMessages(
   const unprocessedMessages = await getUnprocessedMessages(vouchChannel, lastProcessedVouch.messageId);
 
   for (const unprocessedMessage of unprocessedMessages) {
-    await minusVouchCommand.execute(unprocessedMessage, { warnUser: false });
-    await plusVouchCommand.execute(unprocessedMessage, { warnUser: false });
+    await minusVouchCommand.handle(unprocessedMessage, { alertUser: false, react: true });
+    await plusVouchCommand.handle(unprocessedMessage, { alertUser: false, react: true });
   }
 }
 
