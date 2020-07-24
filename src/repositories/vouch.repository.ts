@@ -28,4 +28,8 @@ export class VouchRepository {
   async getLastVouch(): Promise<Vouch | null> {
     return (await this.manager.createQueryBuilder(Vouch, 'vouch').select().orderBy('vouch.createdAt', 'DESC').limit(1).getOne()) ?? null;
   }
+
+  async deleteVouch(id: string): Promise<void> {
+    await this.manager.createQueryBuilder().delete().from(Vouch).where('message_id = :id', { id }).execute();
+  }
 }
