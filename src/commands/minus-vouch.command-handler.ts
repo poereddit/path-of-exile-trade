@@ -2,6 +2,7 @@ import { addMinutes, differenceInMinutes, formatDistance } from 'date-fns';
 import { Client, Message, MessageMentions, TextChannel, User } from 'discord.js';
 
 import { VouchRepository } from '../repositories/vouch.repository';
+import { ReforgePoeService } from '../services/reforge-poe.service';
 
 interface MinusVouchCommand {
   vouchedId: string;
@@ -16,7 +17,7 @@ interface HandleOptions {
 export class MinusVouchCommandHandler {
   private readonly command = /^(\-\s*(\d+|v|vouche?)\s+<@!?(\d{17,19})>|<@!?(\d{17,19})>\s+\-\s*\d+)(.*)/;
 
-  constructor(private client: Client, private vouchRepository: VouchRepository) {}
+  constructor(private client: Client, private vouchRepository: VouchRepository, private reforgePoeService: ReforgePoeService) {}
 
   async handle(message: Message, handleOptions: HandleOptions = { react: true, alertUser: true }): Promise<void> {
     if (
@@ -81,6 +82,7 @@ export class MinusVouchCommandHandler {
     };
 
     await this.vouchRepository.saveVouch(vouch);
+    await this.reforgePoeService.sendVouch(vouch);
     if (handleOptions.react) {
       message.react('✅');
     }
