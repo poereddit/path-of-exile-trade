@@ -14,7 +14,7 @@ interface HandleOptions {
 }
 
 export class MinusVouchCommandHandler {
-  private readonly command = /^(\-\s*(\d+|v|vouche?)\s+<@!?(\d{17,19})>|<@!?(\d{17,19})>\s+\-\s*\d+)(.*)$/;
+  private readonly command = /^(\-\s*(\d+|v|vouche?)\s+<@!?(\d{17,19})>|<@!?(\d{17,19})>\s+\-\s*\d+)(.*)/;
 
   constructor(private client: Client, private vouchRepository: VouchRepository) {}
 
@@ -25,6 +25,11 @@ export class MinusVouchCommandHandler {
       this.isMessageSentInDisallowedChannel(message.channel.id) ||
       this.isMessageNotInCommandFormat(message.content)
     ) {
+      return;
+    }
+
+    if (this.mentionsSameUserMultipleTimes(message.content)) {
+      this.alertUserForMentioningSameUserMultipleTimes(message.channel as TextChannel, message.author, message, handleOptions);
       return;
     }
 
@@ -79,6 +84,37 @@ export class MinusVouchCommandHandler {
     if (handleOptions.react) {
       message.react('✅');
     }
+  }
+
+  private alertUserForMentioningSameUserMultipleTimes(channel: TextChannel, author: User, message: Message, handleOptions: HandleOptions) {
+    if (handleOptions.react) {
+      message.react('❌');
+    }
+
+    if (handleOptions.alertUser) {
+      channel.send(
+        `<@${author.id}>, we don't allow you to vouch the same user multiple times in one message. If they performed multiple services for you, please state that in the reason.`
+      );
+    }
+  }
+
+  mentionsSameUserMultipleTimes(content: string): boolean {
+    const userMentionRegex = /<@!?(\d{17,19})>/gm;
+    let ids: string[] = [];
+    let matches = userMentionRegex.exec(content);
+
+    while (matches) {
+      ids = [...ids, matches[1]];
+      matches = userMentionRegex.exec(content);
+    }
+
+    for (const id of ids) {
+      if (ids.filter((x) => x === id).length > 1) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   hasEveryoneMentioned(mentions: MessageMentions): boolean {
@@ -232,7 +268,7 @@ export class MinusVouchCommandHandler {
   }
 
   private isMessageNotInCommandFormat(message: string): boolean {
-    const regex = new RegExp(this.command, 'gi');
+    const regex = new RegExp(this.command, 'gim');
     return !regex.test(message);
   }
 
@@ -241,7 +277,7 @@ export class MinusVouchCommandHandler {
   }
 
   private parseCommand(message: string): MinusVouchCommand {
-    const regex = new RegExp(this.command, 'gi');
+    const regex = new RegExp(this.command, 'gim');
     const matches = regex.exec(message) as RegExpExecArray;
 
     const vouchedId = this.getVouchedId(matches);
