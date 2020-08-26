@@ -14,7 +14,7 @@ export async function parseOfflineMessages(
   if (!lastProcessedVouch) {
     return;
   }
-  const vouchChannel = (await client.channels.fetch(`${process.env.VOUCH_CHANNEL_ID}`)) as TextChannel;
+  const vouchChannel = (await client.channels.fetch(`${process.env.VOUCH_CHANNEL_ID as string}`)) as TextChannel;
 
   const unprocessedMessages = await getUnprocessedMessages(vouchChannel, lastProcessedVouch.messageId);
 

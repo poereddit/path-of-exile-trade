@@ -5,7 +5,7 @@ import { Vouch } from '../entities/vouch';
 export class ReforgePoeService {
   constructor(private url: string, private token: string) {}
 
-  async sendVouch(vouch: Partial<Vouch>): Promise<void> {
+  async sendVouch(vouch: Vouch): Promise<void> {
     if (!vouch.messageId || !vouch.vouchedId || !vouch.voucherId || !vouch.amount || !vouch.reason) {
       return;
     }

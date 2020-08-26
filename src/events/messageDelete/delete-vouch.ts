@@ -1,10 +1,10 @@
 import { DMChannel, Message, NewsChannel, PartialMessage, TextChannel } from 'discord.js';
+import { EventEmitter } from 'events';
 
 import { VouchRepository } from '../../repositories/vouch.repository';
-import { ReforgePoeService } from '../../services/reforge-poe.service';
 
 export class DeleteVouchEvent {
-  constructor(private vouchRepository: VouchRepository, private reforgePoeService: ReforgePoeService) {}
+  constructor(private vouchRepository: VouchRepository, private eventEmitter: EventEmitter) {}
 
   async handle(message: Message | PartialMessage): Promise<void> {
     if (this.isNotInVouchChannel(message.channel)) {
@@ -12,10 +12,11 @@ export class DeleteVouchEvent {
     }
 
     await this.vouchRepository.deleteVouch(message.id);
-    await this.reforgePoeService.deleteVouch(message.id);
+
+    this.eventEmitter.emit('vouch-deleted', message.id);
   }
 
   private isNotInVouchChannel(channel: TextChannel | DMChannel | NewsChannel) {
-    return channel.id !== `${process.env.VOUCH_CHANNEL_ID}`;
+    return channel.id !== `${process.env.VOUCH_CHANNEL_ID as string}`;
   }
 }

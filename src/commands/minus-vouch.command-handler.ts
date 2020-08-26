@@ -1,8 +1,9 @@
 import { addMinutes, differenceInMinutes, formatDistance } from 'date-fns';
 import { Client, Message, MessageMentions, TextChannel, User } from 'discord.js';
+import { EventEmitter } from 'events';
 
+import { UnsavedVouch } from '../entities/vouch';
 import { VouchRepository } from '../repositories/vouch.repository';
-import { ReforgePoeService } from '../services/reforge-poe.service';
 
 interface MinusVouchCommand {
   vouchedId: string;
@@ -17,7 +18,7 @@ interface HandleOptions {
 export class MinusVouchCommandHandler {
   private readonly command = /^(\-\s*(\d+|v|vouche?)\s+<@!?(\d{17,19})>|<@!?(\d{17,19})>\s+\-\s*\d+)(.*)/;
 
-  constructor(private client: Client, private vouchRepository: VouchRepository, private reforgePoeService: ReforgePoeService) {}
+  constructor(private client: Client, private vouchRepository: VouchRepository, private eventEmitter: EventEmitter) {}
 
   async handle(message: Message, handleOptions: HandleOptions = { react: true, alertUser: true }): Promise<void> {
     if (
@@ -41,12 +42,12 @@ export class MinusVouchCommandHandler {
     }
 
     if (this.hasMultipleMentionsInMessage(message.mentions)) {
-      this.alertUserForMessageWithMultipleUserMentions(message.author, message.channel as TextChannel, handleOptions);
+      void this.alertUserForMessageWithMultipleUserMentions(message.author, message.channel as TextChannel, handleOptions);
       return;
     }
 
     if (await this.isVouchedUserNotAMemberOfGuild(message, vouchedUserInfo)) {
-      this.alertUserForVouchingUserNotAMemberOfGuild(
+      void this.alertUserForVouchingUserNotAMemberOfGuild(
         message.author,
         message.channel as TextChannel,
         message,
@@ -57,21 +58,21 @@ export class MinusVouchCommandHandler {
     }
 
     if (this.isAuthorVouchingSelf(message.author.id, vouchedUserInfo.id)) {
-      this.alertUserForSelfVouch(message.author, message.channel as TextChannel, message, handleOptions);
+      void this.alertUserForSelfVouch(message.author, message.channel as TextChannel, message, handleOptions);
       return;
     }
 
     if (this.isVouchMissingReason(parsedCommand.reason)) {
-      this.alertUserForVouchMissingReason(message, message.channel as TextChannel, message.author, vouchedUserInfo, handleOptions);
+      void this.alertUserForVouchMissingReason(message, message.channel as TextChannel, message.author, vouchedUserInfo, handleOptions);
       return;
     }
 
     if (await this.hasNotEnoughTimePassedSinceLastVouchForVouchedByVoucher(message.author, vouchedUserInfo, message.createdAt)) {
-      this.alertUserForVouchingTooSoon(message, message.channel as TextChannel, message.author, vouchedUserInfo, handleOptions);
+      void this.alertUserForVouchingTooSoon(message, message.channel as TextChannel, message.author, vouchedUserInfo, handleOptions);
       return;
     }
 
-    const vouch = {
+    const vouch: UnsavedVouch = {
       messageId: message.id,
       voucherId: message.author.id,
       vouchedId: vouchedUserInfo.id,
@@ -82,19 +83,20 @@ export class MinusVouchCommandHandler {
     };
 
     await this.vouchRepository.saveVouch(vouch);
-    await this.reforgePoeService.sendVouch(vouch);
     if (handleOptions.react) {
-      message.react('✅');
+      void message.react('✅');
     }
+
+    this.eventEmitter.emit('vouch-added', vouch);
   }
 
   private alertUserForMentioningSameUserMultipleTimes(channel: TextChannel, author: User, message: Message, handleOptions: HandleOptions) {
     if (handleOptions.react) {
-      message.react('❌');
+      void message.react('❌');
     }
 
     if (handleOptions.alertUser) {
-      channel.send(
+      void channel.send(
         `<@${author.id}>, we don't allow you to vouch the same user multiple times in one message. If they performed multiple services for you, please state that in the reason.`
       );
     }
@@ -137,11 +139,11 @@ export class MinusVouchCommandHandler {
     }
 
     if (handleOptions.react) {
-      message.react('❌');
+      void message.react('❌');
     }
 
     if (handleOptions.alertUser) {
-      channel.send(
+      void channel.send(
         `<@${author.id}>, you can't vouch ${vouchedUserInfo.username}#${
           vouchedUserInfo.discriminator
         } because you vouched them too recently. You can vouch them again in ${formatDistance(
@@ -155,59 +157,55 @@ export class MinusVouchCommandHandler {
     }
   }
 
-  private async alertUserForVouchMissingReason(
+  private alertUserForVouchMissingReason(
     message: Message,
     channel: TextChannel,
     author: User,
     vouchedUserInfo: User,
     handleOptions: HandleOptions
-  ): Promise<void> {
+  ): void {
     if (handleOptions.react) {
-      message.react('❌');
+      void message.react('❌');
     }
 
     if (handleOptions.alertUser) {
-      channel.send(
+      void channel.send(
         `<@${author.id}>, a reason is necessary to vouch ${vouchedUserInfo.username}#${vouchedUserInfo.discriminator}. Try again with the command \`-vouch @${vouchedUserInfo.username}#${vouchedUserInfo.discriminator} <reason>\`.`
       );
     }
   }
 
-  private async alertUserForVouchingUserNotAMemberOfGuild(
+  private alertUserForVouchingUserNotAMemberOfGuild(
     author: User,
     channel: TextChannel,
     message: Message,
     vouchedUserInfo: User,
     handleOptions: HandleOptions
-  ): Promise<void> {
+  ): void {
     if (handleOptions.react) {
-      message.react('❌');
+      void message.react('❌');
     }
 
     if (handleOptions.alertUser) {
-      channel.send(
+      void channel.send(
         `<@${author.id}>, I couldn't add a vouch for ${vouchedUserInfo.username}#${vouchedUserInfo.discriminator} because they aren't on our server.`
       );
     }
   }
 
-  private async alertUserForMessageWithMultipleUserMentions(
-    author: User,
-    channel: TextChannel,
-    handleOptions: HandleOptions
-  ): Promise<void> {
+  private alertUserForMessageWithMultipleUserMentions(author: User, channel: TextChannel, handleOptions: HandleOptions): void {
     if (handleOptions.alertUser) {
-      channel.send(`<@${author.id}>, you may only vouch 1 user at a time.`);
+      void channel.send(`<@${author.id}>, you may only vouch 1 user at a time.`);
     }
   }
 
-  private async alertUserForSelfVouch(author: User, channel: TextChannel, message: Message, handleOptions: HandleOptions): Promise<void> {
+  private alertUserForSelfVouch(author: User, channel: TextChannel, message: Message, handleOptions: HandleOptions): void {
     if (handleOptions.react) {
-      message.react('❌');
+      void message.react('❌');
     }
 
     if (handleOptions.alertUser) {
-      channel.send(`Nice try, <@${author.id}>! Vouching yourself isn't allowed.`);
+      void channel.send(`Nice try, <@${author.id}>! Vouching yourself isn't allowed.`);
     }
   }
 
@@ -266,7 +264,7 @@ export class MinusVouchCommandHandler {
   }
 
   private isMessageSentInDisallowedChannel(channelId: string) {
-    return channelId !== `${process.env.VOUCH_CHANNEL_ID}`;
+    return channelId !== `${process.env.VOUCH_CHANNEL_ID as string}`;
   }
 
   private isMessageNotInCommandFormat(message: string): boolean {

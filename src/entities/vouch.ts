@@ -26,3 +26,5 @@ export class Vouch {
   @Column({ name: 'updated_at' })
   updatedAt!: Date;
 }
+
+export type UnsavedVouch = Omit<Vouch, 'id'>;
