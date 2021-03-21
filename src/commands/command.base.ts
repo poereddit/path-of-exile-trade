@@ -23,7 +23,7 @@ export abstract class MessageCommand {
       return false;
     }
 
-    if (message.channel.id !== `${process.env.VOUCH_CHANNEL_ID}`) {
+    if (message.channel.id !== `${process.env.VOUCH_CHANNEL_ID}` && message.channel.id !== `${process.env.COMMANDS_CHANNEL_ID}`) {
       return false;
     }
 

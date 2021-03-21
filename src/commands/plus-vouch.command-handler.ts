@@ -82,10 +82,10 @@ export class PlusVouchCommandHandler {
     };
 
     await this.vouchRepository.saveVouch(vouch);
-    await this.reforgePoeService.sendVouch(vouch);
     if (handleOptions.react) {
       message.react('✅');
     }
+    await this.reforgePoeService.sendVouch(vouch);
   }
 
   private alertUserForMentioningSameUserMultipleTimes(channel: TextChannel, author: User, message: Message, handleOptions: HandleOptions) {
