@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import 'dotenv/config';
 
 import { Client, Message, PartialMessage } from 'discord.js';
 import { EventEmitter } from 'events';
@@ -33,7 +34,7 @@ async function main() {
     minusVouchCommandHandler,
     plusVouchCommandHandler,
     checkVouchCommandHandler,
-    deleteVouchEvent
+    deleteVouchEvent,
   );
 
   void client.login(process.env.DISCORD_TOKEN);
@@ -45,7 +46,7 @@ function setupDiscordEventsAndHandlers(
   minusVouchCommandHandler: MinusVouchCommandHandler,
   plusVouchCommandHandler: PlusVouchCommandHandler,
   checkVouchCommandHandler: CheckVouchCommandHandler,
-  deleteVouchEvent: DeleteVouchEvent
+  deleteVouchEvent: DeleteVouchEvent,
 ) {
   client.once('ready', () => {
     setStatus(client.user);
