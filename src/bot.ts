@@ -12,7 +12,6 @@ import { DeleteVouchEvent } from './events/messageDelete/delete-vouch';
 import { parseOfflineMessages } from './events/ready/parse-offline-messages';
 import { setStatus } from './events/ready/set-status';
 import { VouchRepository } from './repositories/vouch.repository';
-import { ReforgePoeService } from './services/reforge-poe.service';
 
 async function main() {
   ensureEnvironmentVariablesAreSet();
@@ -37,15 +36,7 @@ async function main() {
     deleteVouchEvent
   );
 
-  const reforgePoeService = new ReforgePoeService(process.env.REFORGE_POE_API_URL as string, process.env.REFORGE_POE_TOKEN as string);
-  setupReforgePoeEventsAndHandlers(eventEmitter, reforgePoeService);
-
   void client.login(process.env.DISCORD_TOKEN);
-}
-
-function setupReforgePoeEventsAndHandlers(eventEmitter: EventEmitter, reforgePoeService: ReforgePoeService) {
-  eventEmitter.on('vouch-added', (vouch: Vouch) => void reforgePoeService.sendVouch(vouch));
-  eventEmitter.on('vouch-deleted', (messageId: string) => void reforgePoeService.deleteVouch(messageId));
 }
 
 function setupDiscordEventsAndHandlers(
@@ -83,8 +74,6 @@ function ensureEnvironmentVariablesAreSet() {
     'TYPEORM_MIGRATIONS',
     'SUGGESTIONS_CHANNEL_ID',
     'VOUCH_CHANNEL_ID',
-    'REFORGE_POE_API_URL',
-    'REFORGE_POE_TOKEN',
   ];
 
   const unsetEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
