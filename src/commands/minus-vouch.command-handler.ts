@@ -18,7 +18,11 @@ interface HandleOptions {
 export class MinusVouchCommandHandler {
   private readonly command = /^(\-\s*(\d+|v|vouche?)\s+<@!?(\d{17,19})>|<@!?(\d{17,19})>\s+\-\s*\d+)(.*)/;
 
-  constructor(private client: Client, private vouchRepository: VouchRepository, private eventEmitter: EventEmitter) {}
+  constructor(
+    private client: Client,
+    private vouchRepository: VouchRepository,
+    private eventEmitter: EventEmitter,
+  ) {}
 
   async handle(message: Message, handleOptions: HandleOptions = { react: true, alertUser: true }): Promise<void> {
     if (
@@ -52,7 +56,7 @@ export class MinusVouchCommandHandler {
         message.channel as TextChannel,
         message,
         vouchedUserInfo,
-        handleOptions
+        handleOptions,
       );
       return;
     }
@@ -97,7 +101,7 @@ export class MinusVouchCommandHandler {
 
     if (handleOptions.alertUser) {
       void channel.send(
-        `<@${author.id}>, we don't allow you to vouch the same user multiple times in one message. If they performed multiple services for you, please state that in the reason.`
+        `<@${author.id}>, we don't allow you to vouch the same user multiple times in one message. If they performed multiple services for you, please state that in the reason.`,
       );
     }
   }
@@ -130,7 +134,7 @@ export class MinusVouchCommandHandler {
     channel: TextChannel,
     author: User,
     vouchedUserInfo: User,
-    handleOptions: HandleOptions
+    handleOptions: HandleOptions,
   ): Promise<void> {
     const lastVouchForUserByAuthor = await this.getLastVouchTimeForVouchedByVoucher(author, vouchedUserInfo);
 
@@ -151,8 +155,8 @@ export class MinusVouchCommandHandler {
           addMinutes(lastVouchForUserByAuthor, 10),
           {
             includeSeconds: true,
-          }
-        )}.`
+          },
+        )}.`,
       );
     }
   }
@@ -162,7 +166,7 @@ export class MinusVouchCommandHandler {
     channel: TextChannel,
     author: User,
     vouchedUserInfo: User,
-    handleOptions: HandleOptions
+    handleOptions: HandleOptions,
   ): void {
     if (handleOptions.react) {
       void message.react('❌');
@@ -170,7 +174,7 @@ export class MinusVouchCommandHandler {
 
     if (handleOptions.alertUser) {
       void channel.send(
-        `<@${author.id}>, a reason is necessary to vouch ${vouchedUserInfo.username}#${vouchedUserInfo.discriminator}. Try again with the command \`-vouch @${vouchedUserInfo.username}#${vouchedUserInfo.discriminator} <reason>\`.`
+        `<@${author.id}>, a reason is necessary to vouch ${vouchedUserInfo.username}#${vouchedUserInfo.discriminator}. Try again with the command \`-vouch @${vouchedUserInfo.username}#${vouchedUserInfo.discriminator} <reason>\`.`,
       );
     }
   }
@@ -180,7 +184,7 @@ export class MinusVouchCommandHandler {
     channel: TextChannel,
     message: Message,
     vouchedUserInfo: User,
-    handleOptions: HandleOptions
+    handleOptions: HandleOptions,
   ): void {
     if (handleOptions.react) {
       void message.react('❌');
@@ -188,7 +192,7 @@ export class MinusVouchCommandHandler {
 
     if (handleOptions.alertUser) {
       void channel.send(
-        `<@${author.id}>, I couldn't add a vouch for ${vouchedUserInfo.username}#${vouchedUserInfo.discriminator} because they aren't on our server.`
+        `<@${author.id}>, I couldn't add a vouch for ${vouchedUserInfo.username}#${vouchedUserInfo.discriminator} because they aren't on our server.`,
       );
     }
   }
@@ -212,7 +216,7 @@ export class MinusVouchCommandHandler {
   private async hasNotEnoughTimePassedSinceLastVouchForVouchedByVoucher(
     voucher: User,
     vouched: User,
-    messageCreatedAt: Date
+    messageCreatedAt: Date,
   ): Promise<boolean> {
     const lastVouchForUserByAuthor = await this.getLastVouchTimeForVouchedByVoucher(voucher, vouched);
 

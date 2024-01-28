@@ -20,7 +20,7 @@ export class CreateVouches1593566660925 implements MigrationInterface {
       new TableUnique({
         name: 'ix_vouches_message_id',
         columnNames: ['message_id'],
-      })
+      }),
     );
 
     await queryRunner.createIndex(
@@ -28,7 +28,7 @@ export class CreateVouches1593566660925 implements MigrationInterface {
       new TableIndex({
         name: 'ix_vouches_voucher_id',
         columnNames: ['voucher_id'],
-      })
+      }),
     );
 
     await queryRunner.createIndex(
@@ -36,7 +36,7 @@ export class CreateVouches1593566660925 implements MigrationInterface {
       new TableIndex({
         name: 'ix_vouches_vouched_id',
         columnNames: ['vouched_id'],
-      })
+      }),
     );
   }
 

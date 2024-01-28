@@ -1,4 +1,4 @@
-import { Client, Message, TextChannel } from 'discord.js';
+import { Client as DiscordClient, Message, TextChannel } from 'discord.js';
 
 import { MinusVouchCommandHandler } from '../../commands/minus-vouch.command-handler';
 import { PlusVouchCommandHandler } from '../../commands/plus-vouch.command-handler';
@@ -6,9 +6,9 @@ import { VouchRepository } from '../../repositories/vouch.repository';
 
 export async function parseOfflineMessages(
   vouchRepository: VouchRepository,
-  client: Client,
+  client: DiscordClient,
   minusVouchCommand: MinusVouchCommandHandler,
-  plusVouchCommand: PlusVouchCommandHandler
+  plusVouchCommand: PlusVouchCommandHandler,
 ): Promise<void> {
   const lastProcessedVouch = await vouchRepository.getLastVouch();
   if (!lastProcessedVouch) {

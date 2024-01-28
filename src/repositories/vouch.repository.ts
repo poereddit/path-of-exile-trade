@@ -1,12 +1,10 @@
-import { EntityManager, EntityRepository } from 'typeorm';
-
+import 'reflect-metadata';
+import { dbDataSource } from '../data-source';
 import { UnsavedVouch, Vouch } from '../entities/vouch';
 import { VouchSummary } from '../models/vouch-summary';
 
-@EntityRepository()
-export class VouchRepository {
-  constructor(private manager: EntityManager) {}
-
+export type VouchRepository = typeof vouchRepository;
+export const vouchRepository = dbDataSource.getRepository(Vouch).extend({
   async saveVouch(vouch: UnsavedVouch): Promise<Vouch> {
     const result = await this.manager.createQueryBuilder().insert().into(Vouch).values(vouch).returning('id').execute();
     const vouchWithId: Vouch = {
@@ -15,8 +13,7 @@ export class VouchRepository {
     };
 
     return vouchWithId;
-  }
-
+  },
   async findLastVouchForVouchedByVoucher(queryParams: { vouchedId: string; voucherId: string }): Promise<Vouch | null> {
     const { vouchedId, voucherId } = queryParams;
 
@@ -30,16 +27,13 @@ export class VouchRepository {
         .limit(1)
         .getOne()) ?? null
     );
-  }
-
+  },
   async getLastVouch(): Promise<Vouch | null> {
-    return (await this.manager.createQueryBuilder(Vouch, 'vouch').select().orderBy('vouch.createdAt', 'DESC').limit(1).getOne()) ?? null;
-  }
-
+    return (await this.createQueryBuilder('vouch').orderBy('vouch.createdAt', 'DESC').limit(1).getOne()) ?? null;
+  },
   async deleteVouch(id: string): Promise<void> {
     await this.manager.createQueryBuilder().delete().from(Vouch).where('message_id = :id', { id }).execute();
-  }
-
+  },
   async getVouchSummary(vouchedId: string): Promise<VouchSummary> {
     const [recentPositiveVouches, recentNegativeVouches, uniqueVouchers, positiveVouches, negativeVouches] = await Promise.all([
       this.getLastVouchesForUser(vouchedId, { positive: true, count: 5 }),
@@ -57,9 +51,8 @@ export class VouchRepository {
       positiveVouches,
       negativeVouches,
     };
-  }
-
-  private async getPositiveVouchCount(vouchedId: string): Promise<number> {
+  },
+  async getPositiveVouchCount(vouchedId: string): Promise<number> {
     const positiveVouchCountQueryResult = (await this.manager
       .createQueryBuilder()
       .select('COUNT(*)', 'count')
@@ -73,9 +66,8 @@ export class VouchRepository {
     }
 
     return +positiveVouchCountQueryResult[0].count;
-  }
-
-  private async getNegativeVouchCount(vouchedId: string): Promise<number> {
+  },
+  async getNegativeVouchCount(vouchedId: string): Promise<number> {
     const negativeVouchCountQueryResult = (await this.manager
       .createQueryBuilder()
       .select('COUNT(*)', 'count')
@@ -89,9 +81,8 @@ export class VouchRepository {
     }
 
     return +negativeVouchCountQueryResult[0].count;
-  }
-
-  private async getUniqueVouchers(vouchedId: string): Promise<number> {
+  },
+  async getUniqueVouchers(vouchedId: string): Promise<number> {
     const uniqueVouchersQueryResult = (await this.manager
       .createQueryBuilder()
       .select('COUNT(DISTINCT voucher_id)', 'count')
@@ -104,11 +95,10 @@ export class VouchRepository {
     }
 
     return +uniqueVouchersQueryResult[0].count;
-  }
-
-  private async getLastVouchesForUser(
+  },
+  async getLastVouchesForUser(
     vouchedId: string,
-    options: { positive: boolean; count: number } = { positive: true, count: 5 }
+    options: { positive: boolean; count: number } = { positive: true, count: 5 },
   ): Promise<Vouch[]> {
     const lastVouches = await this.manager
       .createQueryBuilder(Vouch, 'vouch')
@@ -119,5 +109,5 @@ export class VouchRepository {
       .getMany();
 
     return lastVouches;
-  }
-}
+  },
+});
