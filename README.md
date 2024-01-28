@@ -9,7 +9,7 @@
    1. Docker: `docker build -t <your_tag> .`
 1. Create a Postgres database
 1. Run the migration scripts
-   1. Local: `yanr migration:run`
+   1. Local: `yarn migration:run`
    1. Docker: `docker run --rm --env-file=.env <your_tag> ./node_modules/.bin/typeorm migration:run`
 1. Run the bot
    1. Local Development: `yarn dev:watch`. This command runs the build and start the bot in watch mode. Refreshing after changes.
