@@ -1,35 +1,33 @@
 import 'reflect-metadata';
-import 'dotenv/config';
-
-import { Client, Message, PartialMessage } from 'discord.js';
+import { Client as DiscordClient, Message, PartialMessage } from 'discord.js';
+import dotenv from 'dotenv';
 import { EventEmitter } from 'events';
-import { createConnection } from 'typeorm';
 
 import { CheckVouchCommandHandler } from './commands/check-vouch.command-handler';
 import { MinusVouchCommandHandler } from './commands/minus-vouch.command-handler';
 import { PlusVouchCommandHandler } from './commands/plus-vouch.command-handler';
-import { Vouch } from './entities/vouch';
+import { dbDataSource } from './data-source';
 import { DeleteVouchEvent } from './events/messageDelete/delete-vouch';
 import { parseOfflineMessages } from './events/ready/parse-offline-messages';
 import { setStatus } from './events/ready/set-status';
-import { VouchRepository } from './repositories/vouch.repository';
+import { VouchRepository, vouchRepository } from './repositories/vouch.repository';
+
+dotenv.config();
 
 async function main() {
   ensureEnvironmentVariablesAreSet();
 
-  const connection = await createConnection();
-  const vouchRepository = connection.getCustomRepository(VouchRepository);
-
-  const client = new Client();
+  await dbDataSource.initialize();
+  const discordClient = new DiscordClient();
   const eventEmitter = new EventEmitter();
 
-  const checkVouchCommandHandler = new CheckVouchCommandHandler(client, vouchRepository);
-  const plusVouchCommandHandler = new PlusVouchCommandHandler(client, vouchRepository, eventEmitter);
-  const minusVouchCommandHandler = new MinusVouchCommandHandler(client, vouchRepository, eventEmitter);
+  const checkVouchCommandHandler = new CheckVouchCommandHandler(discordClient, vouchRepository);
+  const plusVouchCommandHandler = new PlusVouchCommandHandler(discordClient, vouchRepository, eventEmitter);
+  const minusVouchCommandHandler = new MinusVouchCommandHandler(discordClient, vouchRepository, eventEmitter);
   const deleteVouchEvent = new DeleteVouchEvent(vouchRepository, eventEmitter);
 
   setupDiscordEventsAndHandlers(
-    client,
+    discordClient,
     vouchRepository,
     minusVouchCommandHandler,
     plusVouchCommandHandler,
@@ -37,33 +35,32 @@ async function main() {
     deleteVouchEvent,
   );
 
-  void client.login(process.env.DISCORD_TOKEN);
+  void discordClient.login(process.env.DISCORD_TOKEN);
 }
 
 function setupDiscordEventsAndHandlers(
-  client: Client,
+  discordClient: DiscordClient,
   vouchRepository: VouchRepository,
   minusVouchCommandHandler: MinusVouchCommandHandler,
   plusVouchCommandHandler: PlusVouchCommandHandler,
   checkVouchCommandHandler: CheckVouchCommandHandler,
   deleteVouchEvent: DeleteVouchEvent,
 ) {
-  client.once('ready', () => {
-    setStatus(client.user);
-    void parseOfflineMessages(vouchRepository, client, minusVouchCommandHandler, plusVouchCommandHandler);
+  discordClient.once('ready', () => {
+    setStatus(discordClient.user);
+    void parseOfflineMessages(vouchRepository, discordClient, minusVouchCommandHandler, plusVouchCommandHandler);
   });
 
-  client.on('message', (message: Message) => void plusVouchCommandHandler.handle(message));
-  client.on('message', (message: Message) => void minusVouchCommandHandler.handle(message));
-  client.on('message', (message: Message) => void checkVouchCommandHandler.handle(message));
+  discordClient.on('message', (message: Message) => void plusVouchCommandHandler.handle(message));
+  discordClient.on('message', (message: Message) => void minusVouchCommandHandler.handle(message));
+  discordClient.on('message', (message: Message) => void checkVouchCommandHandler.handle(message));
 
-  client.on('messageDelete', (message: Message | PartialMessage) => void deleteVouchEvent.handle(message));
+  discordClient.on('messageDelete', (message: Message | PartialMessage) => void deleteVouchEvent.handle(message));
 }
 
 function ensureEnvironmentVariablesAreSet() {
   const requiredEnvVars = [
     'DISCORD_TOKEN',
-    'PREFIX',
     'TYPEORM_CONNECTION',
     'TYPEORM_HOST',
     'TYPEORM_USERNAME',
