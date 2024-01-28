@@ -13,7 +13,10 @@ const colors = {
 export class CheckVouchCommandHandler {
   private readonly command = /^\?\s*(?:\d+|v|vouche?)\s+<@!?(\d{17,19})>\s*$/;
 
-  constructor(private client: Client, private vouchRepository: VouchRepository) {}
+  constructor(
+    private client: Client,
+    private vouchRepository: VouchRepository,
+  ) {}
 
   async handle(message: Message): Promise<void> {
     if (
@@ -58,14 +61,14 @@ export class CheckVouchCommandHandler {
     if (vouchSummary.recentPositiveVouches.length > 0) {
       embed.addField(
         'Recent Positive Vouches',
-        await this.getRecentVouchesEmbedField(vouchSummary.recentPositiveVouches, message.channel as TextChannel)
+        await this.getRecentVouchesEmbedField(vouchSummary.recentPositiveVouches, message.channel as TextChannel),
       );
     }
 
     if (vouchSummary.recentNegativeVouches.length > 0) {
       embed.addField(
         'Recent Negative Vouches',
-        await this.getRecentVouchesEmbedField(vouchSummary.recentNegativeVouches, message.channel as TextChannel)
+        await this.getRecentVouchesEmbedField(vouchSummary.recentNegativeVouches, message.channel as TextChannel),
       );
     }
 
