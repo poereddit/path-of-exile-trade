@@ -1,6 +1,5 @@
-import 'reflect-metadata';
+import 'dotenv/config';
 import { Client as DiscordClient, Message, PartialMessage } from 'discord.js';
-import dotenv from 'dotenv';
 import { EventEmitter } from 'events';
 
 import { CheckVouchCommandHandler } from './commands/check-vouch.command-handler';
@@ -11,8 +10,6 @@ import { DeleteVouchEvent } from './events/messageDelete/delete-vouch';
 import { parseOfflineMessages } from './events/ready/parse-offline-messages';
 import { setStatus } from './events/ready/set-status';
 import { VouchRepository, vouchRepository } from './repositories/vouch.repository';
-
-dotenv.config();
 
 async function main() {
   ensureEnvironmentVariablesAreSet();

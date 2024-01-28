@@ -1,9 +1,6 @@
-import 'reflect-metadata';
-
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import { DataSource } from 'typeorm';
 
-dotenv.config();
 export const dbDataSource = new DataSource({
   type: 'postgres',
   host: process.env.TYPEORM_HOST,
