@@ -1,32 +1,21 @@
 {
   "$schema": "https://json.schemastore.org/swcrc",
   "sourceMaps": true,
-  "module": {
-    "type": "commonjs",
-    "strictMode": true,
-    "noInterop": false
-  },
   "jsc": {
-    "externalHelpers": false,
-    "target": "es2018",
     "parser": {
       "syntax": "typescript",
-      "tsx": true,
       "decorators": true,
       "dynamicImport": true
     },
     "transform": {
       "legacyDecorator": true,
-      "decoratorMetadata": true,
-      "react": {
-        "throwIfNamespace": false,
-        "useBuiltins": false,
-        "pragma": "React.createElement",
-        "pragmaFrag": "React.Fragment",
-        "importSource": "react"
-      }
+      "decoratorMetadata": true
     },
-    "keepClassNames": false,
-    "baseUrl": "./"
-  }
+    "target": "es2020",
+    "baseUrl": "."
+  },
+  "module": {
+    "type": "commonjs"
+  },
+  "minify": false
 }
